@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生日快乐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #fff0f6;
+            font-family: "Microsoft Yahei", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        .birthday-card {
+            text-align: center;
+            max-width: 600px;
+            z-index: 10;
+            position: relative;
+        }
+        .birthday-img {
+            width: 100%;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(255,100,150,0.25);
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #e64980;
+            font-size: 42px;
+            margin-bottom: 16px;
+        }
+        p {
+            font-size: 22px;
+            color: #662549;
+        }
+        /* 画布：烟花层 */
+        #fireworkCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+        /* 飘落爱心 */
+        .heart {
+            position: fixed;
+            top: -50px;
+            z-index: 2;
+            color:#ff6b9d;
+            font-size: 24px;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(110vh) rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+<canvas id="fireworkCanvas"></canvas>
+
+    <div class="birthday-card">
+        <img class="birthday-img" src="https://img.remit.ee/i/RGqHvrrZ2KQn" alt="RGqHvrrZ2KQn.jpeg" />
+        <h1>祝黄诗慧生日快乐！</h1>
+        <p>愿岁岁平安，万事顺意，天天开心🎉🎂</p>
+    </div>
+
+<script>
+// ========== 爱心飘落 ==========
+function createHeart(){
+    const heart = document.createElement('div');
+    heart.classList.add('heart');
+    heart.innerHTML = '❤';
+    heart.style.left = Math.random()*100 + 'vw';
+    heart.style.animationDuration = (Math.random()*3 +4)+'s';
+    document.body.appendChild(heart);
+    setTimeout(()=>heart.remove(),7000);
+}
+setInterval(createHeart,400);
+
+// ========== 烟花特效 ==========
+const canvas = document.getElementById('fireworkCanvas');
+const ctx = canvas.getContext('2d');
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
+window.addEventListener('resize',()=>{
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+});
+
+class Particle{
+    constructor(x,y,color,speed,angle,size){
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.speed = speed;
+        this.angle = angle;
+        this.size = size;
+        this.vx = Math.cos(angle)*speed;
+        this.vy = Math.sin(angle)*speed;
+        this.alpha = 1;
+        this.gravity = 0.08;
+    }
+    update(){
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.gravity;
+        this.alpha -=0.015;
+    }
+    draw(){
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+let fireworks = [];
+function launchFirework(){
+    const x = Math.random()*w*0.6 + w*0.2;
+    const y = Math.random()*h*0.4 + h*0.1;
+    const colors = ['#ff4757','#ffa502','#2ed573','#1e90ff','#ff6b9d','#ffd700'];
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    const count = 80;
+    for(let i=0;i<count;i++){
+        const ang = (Math.PI*2/count)*i;
+        const spd = Math.random()*4+2;
+        fireworks.push(new Particle(x,y,color,spd,ang,Math.random()*2+1));
+    }
+}
+
+setInterval(launchFirework,1200);
+
+function loop(){
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    ctx.fillRect(0,0,w,h);
+    for(let i = fireworks.length-1;i>=0;i--){
+        fireworks[i].update();
+        fireworks[i].draw();
+        if(fireworks[i].alpha <=0) fireworks.splice(i,1);
+    }
+    requestAnimationFrame(loop);
+}
+loop();
+</script>
+
+</body>
+</html>
